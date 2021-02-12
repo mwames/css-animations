@@ -1,0 +1,68 @@
+version: '3.8'
+services:
+  # database:
+  #   container_name: database
+  #   image: postgres:latest
+  #   ports:
+  #     - 5432:5432
+  #   restart: always
+  #   volumes:
+  #     - database:/var/lib/postgresql/data
+  #   networks:
+  #     backend:
+  #   environment:
+  #     POSTGRES_USER:
+  #     POSTGRES_PASSWORD: postgres_password #Necessary for the latest postgres
+  #     POSTGRES_DB:
+
+  # backend:
+  #   container_name: backend
+  #   depends_on:
+  #     - database
+  #   image: backend_local:1.0
+  #   # build:
+  #   #   context: Path to backend dockerfile
+  #   networks:
+  #     backend:
+  #   env_file: .env
+  #   restart: always
+  #   volumes:
+  #     - ~/repos/composer_connect_api/app/src:/usr/src/app/src
+  #   command: ["npm", "run", "dev"]
+
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: frontend_local:1.0
+    volumes:
+      - ./app:/usr/src/app
+    networks: 
+      frontend:
+    env_file: .env
+    restart: always
+    stdin_open: true
+    command: ["npm", "run", "start"]
+
+  proxy:
+    image: nginx:latest
+    depends_on: 
+      # - backend
+      - frontend
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    networks: 
+      frontend:
+      backend:
+    ports:
+      - 8080:8080
+      - 443:443
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  database:
